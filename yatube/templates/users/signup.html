@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title_cont %}Зарегистрироваться{% endblock %}
+{% block main_cont %}
+  <div class="row justify-content-center">
+    <div class="col-md-8 p-5">
+      <div class="card">
+        <div class="card-header">Зарегистрироваться</div>
+          <div class="card-body">
+            {% include 'includes/form_errors.html' %}
+
+            <form method="post" 
+              {% if action_url %}
+                action="{% url 'users:signup' %}"
+              {% endif %}
+            >
+            {% csrf_token %}
+
+            {% include 'includes/form_fields.html' %}
+
+            <div class="col-md-6 offset-md-4">
+              <button type="submit" class="btn btn-primary">
+                Зарегистрироваться
+              </button>
+            </div>
+            </form>
+          </div>
+        </div>
+      </div>
+  </div>
+{% endblock %}
