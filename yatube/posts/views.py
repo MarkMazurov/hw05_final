@@ -120,14 +120,9 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
-    follower = Follow.objects.filter(
-        author=author,
-        user=request.user
-    ).exists()
-    if follower or author == request.user:
+    if author == request.user:
         return redirect('posts:profile', username=username)
-
-    Follow.objects.create(
+    Follow.objects.get_or_create(
         author=author,
         user=request.user
     )
@@ -137,9 +132,6 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    if author == request.user:
-        return redirect('posts:profile', username=username)
-
     subscription = get_object_or_404(
         Follow,
         author=author,

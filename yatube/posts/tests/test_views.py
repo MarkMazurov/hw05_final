@@ -250,21 +250,12 @@ class FollowingTest(BaseTest):
         self.other_user = User.objects.create_user(username='joe')
         self.auth_user_2 = Client()
         self.auth_user_2.force_login(self.other_user)
-        self.third_user = User.objects.create_user(username='bobby')
-        self.third_auth_user = Client()
-        self.third_auth_user.force_login(self.third_user)
         self.follow_count = Follow.objects.count()
-        self.follow = Follow.objects.create(
-            author=self.user,
-            user=self.other_user
-        )
 
     def test_auth_user_following(self):
-        """Авторизованный юзер может подписываться на других юзеров
-        и удалять их из подписок.
-        """
+        """Авторизованный юзер может подписаться на автора."""
         self.auth_user_2.get(reverse(
-            'posts:profile',
+            'posts:profile_follow',
             kwargs={'username': 'author'})
         )
         subscription = Follow.objects.filter(
@@ -273,18 +264,66 @@ class FollowingTest(BaseTest):
         )
         self.assertEqual(Follow.objects.count(), self.follow_count + 1)
         self.assertTrue(subscription.exists())
-        subscription.delete()
-        self.assertEqual(Follow.objects.count(), self.follow_count)
 
-    def test_new_post_add_to_subscription(self):
-        """Новый пост появляется в ленте подписчиков и не доступен
-        в ленте тех, кто не подписан на автора.
-        """
+    def test_follower_can_unsubscribe(self):
+        """Подписчик может отписаться от автора."""
+        Follow.objects.create(
+            author=self.user,
+            user=self.other_user
+        )
+        self.auth_user_2.get(reverse(
+            'posts:profile_unfollow',
+            kwargs={'username': 'author'})
+        )
+        self.assertEqual(Follow.objects.count(), self.follow_count)
+        self.assertFalse(Follow.objects.filter(
+            author=self.user,
+            user=self.other_user).exists()
+        )
+
+    def test_new_post_available_to_subscribers(self):
+        """Новый пост появляется в ленте подписчиков."""
+        Follow.objects.create(
+            author=self.user,
+            user=self.other_user
+        )
         new_post = Post.objects.create(
             text='Любимый пост подписчиков',
             author=self.user
         )
-        response_1 = self.auth_user_2.get(reverse('posts:follow_index'))
-        self.assertEqual(new_post, response_1.context['page_obj'][0])
-        response_2 = self.third_auth_user.get(reverse('posts:follow_index'))
-        self.assertEqual(len(response_2.context['page_obj']), 0)
+        response = self.auth_user_2.get(reverse('posts:follow_index'))
+        self.assertEqual(new_post, response.context['page_obj'][0])
+
+    def test_non_subscribers_not_see_new_post(self):
+        """Неподписанные на автора юзеры не видят новый пост в ленте."""
+        Post.objects.create(
+            text='Невидимый пост',
+            author=self.user
+        )
+        response = self.auth_user_2.get(reverse('posts:follow_index'))
+        self.assertEqual(len(response.context['page_obj']), 0)
+
+    def test_prevent_self_followng(self):
+        """Автор не может подписаться сам на себя."""
+        # Пробуем создать подписку на самого себя. 
+        self.authorized_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': 'author'})
+        )
+        # Проверяем, что подписка не создалась.
+        self.assertEqual(Follow.objects.count(), self.follow_count)
+
+    def test_attempt_to_resubscribe(self):
+        """Повторно подписаться на автора нельзя."""
+        # Создаем подписку вручную.
+        Follow.objects.create(
+            author=self.user,
+            user=self.other_user
+        )
+        # Пробуем тем же юзером повторно подписаться на автора.
+        self.auth_user_2.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': 'author'})
+        )
+        # В проверке учитываем, что подписка должна быть лишь одна.
+        self.assertEqual(Follow.objects.count(), self.follow_count + 1)
