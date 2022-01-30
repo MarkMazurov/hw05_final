@@ -305,7 +305,7 @@ class FollowingTest(BaseTest):
 
     def test_prevent_self_followng(self):
         """Автор не может подписаться сам на себя."""
-        # Пробуем создать подписку на самого себя. 
+        # Пробуем создать подписку на самого себя.
         self.authorized_client.get(reverse(
             'posts:profile_follow',
             kwargs={'username': 'author'})
