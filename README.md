@@ -1,3 +1,19 @@
-# hw05_final
+# Блог-платформа Yatube
+### Описание
+Социальная сеть для блогеров, где каждый сможет раскрыть свой авторский талант. Платформа позволяет пользователям создавать посты, просматриваться записи других пользователей, оставлять к ним комментарии, а также подписываться на понравившихся авторов.
+### Технологии
+* Python 3.9
+* Django 2.2.19
+### Запуск проекта в dev-режиме
+- Установите и активируйте виртуальное окружение
+- Установите зависимости из файла requirements.txt
+``` 
+pip install -r requirements.txt
+```
 
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
+- В папке с файлом manage.py выполните команду:
+```
+python3 manage.py runserver
+```
+### Автор
+Марк Мазуров
